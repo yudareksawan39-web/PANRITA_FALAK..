@@ -1,0 +1,12 @@
+{
+  "name": "Anyaman Semesta — Menyibak Misteri dan Tauhid",
+  "short_name": "Anyaman Semesta",
+  "description": "Media belajar interaktif matematika, budaya, dan motif Nusantara.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#101a2a",
+  "theme_color": "#101a2a",
+  "icons": [
+    { "src": "assets/icon-aplikasi.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

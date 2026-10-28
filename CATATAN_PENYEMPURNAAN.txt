@@ -1,0 +1,7 @@
+PANRITA FALAK — CATATAN PENYEMPURNAAN
+
+1. Globe: tekstur Bumi dipersiapkan untuk bergerak melintasi lebar tekstur, tetapi sumber tekstur saat ini masih daring. Perlu diuji visual pada browser target.
+2. Bahasa: memperbaiki bug fatal yang sebelumnya menimpa kamus Lontara dengan teks Indonesia dan menghapus alihaksara otomatis yang berpotensi salah. Kamus Lontara/Jawi yang tersedia masih belum mencakup seluruh string aplikasi; string yang belum diterjemahkan tetap menggunakan teks sumber agar tidak menghasilkan aksara palsu. Jangan mengklaim terjemahan 100% tervalidasi. Perlu penyunting bahasa Bugis-Lontara dan Arab untuk melengkapi seluruh UI.
+3. Azan: audio kiriman pengguna disalin ke assets/azan-pengguna.mpeg. Halaman Waktu Salat kini menyediakan opt-in, izin notifikasi, tombol matikan, dan uji suara. Penjadwalan web hanya diperiksa ketika halaman berjalan; ini bukan alarm Android native dan tidak menjamin berbunyi saat aplikasi ditutup/HP membatasi latar belakang. Untuk keandalan produksi perlu integrasi native Android (izin notifikasi/alarm, jadwal ulang harian, boot receiver, audio foreground service sesuai versi Android).
+4. Akurasi: waktu salat mengikuti algoritme/metode hisab yang telah ada dalam proyek dan harus dibandingkan dengan jadwal resmi lokal sebelum penggunaan resmi.
+5. Pengujian otomatis: lakukan uji di perangkat target, termasuk izin, audio, mode senyap, restart, perubahan lokasi/zona waktu, dan bahasa.

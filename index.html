@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d6b62">
+  <meta name="description" content="Ilmu Falak — arah kiblat, waktu salat, posisi matahari, jadwal bulanan, dan kalkulator falak.">
+  <title>PANRITA FALAK</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">\n  <link rel="stylesheet" href="hilal.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style id="falak-additions">
+.app-mark img{width:76px;height:76px;object-fit:contain;display:block}
+.brand-symbol{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;flex:0 0 46px}
+.brand-symbol img{width:42px;height:42px;object-fit:contain;display:block}
+.coordinate-calculator{display:grid;gap:16px}
+.coordinate-form{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+.coordinate-form label{display:grid;gap:7px}
+.coordinate-form input{width:100%;box-sizing:border-box}
+.coordinate-result{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.coordinate-value{padding:14px;border-radius:14px;background:rgba(13,107,98,.08);display:grid;gap:4px}
+.coordinate-value small{opacity:.75}
+.coordinate-value b{font-size:1.15rem}
+.coordinate-name{font-weight:700;margin:0}
+.coordinate-actions{display:flex;flex-wrap:wrap;gap:10px}
+.coordinate-status{min-height:1.2em;font-size:.9rem;opacity:.78}
+@media(max-width:640px){.coordinate-form{grid-template-columns:1fr}.coordinate-result{grid-template-columns:1fr}}
+.coordinate-input-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.coordinate-input-grid label{display:grid;gap:7px}
+.coordinate-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.coordinate-metric{padding:12px;border-radius:14px;background:rgba(13,107,98,.06);display:grid;gap:4px}
+.coordinate-metric small{opacity:.72}
+.coordinate-metric b{font-size:1.02rem}
+.coordinate-section-title{font-weight:700;margin:4px 0 0}
+.coordinate-note{font-size:.88rem;opacity:.75;margin:0}
+@media(max-width:760px){.coordinate-metrics{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.coordinate-input-grid,.coordinate-metrics{grid-template-columns:1fr}}
+</style></head>
+<body class="dark">
+  <div id="app">
+    <!-- Splash -->
+    <section id="splashScreen" class="splash-screen">
+      <div class="splash-art">
+        <div class="moon">☾</div>
+        <div class="star star-1">✦</div><div class="star star-2">✧</div>
+        <div class="mosque">
+          <div class="dome"></div>
+          <div class="mosque-body"></div>
+          <div class="minaret left"></div><div class="minaret right"></div>
+        </div>
+      </div>
+      <div class="splash-content">
+        <div class="app-mark"><img src="assets/logo-iain-parepare.png" alt="Logo IAIN Parepare"></div>
+        <h1>PANRITA FALAK</h1>
+        <p>Arah Kiblat • Waktu Salat • Posisi Matahari</p>
+        <div class="quote">“Maka hadapkanlah wajahmu ke arah Masjidil Haram...”<br><small>QS. Al-Baqarah: 144</small></div>
+        <button class="primary-btn splash-start" data-action="start">Mulai</button>
+      </div>
+    </section>
+
+    <!-- Main shell -->
+    <div id="mainShell" class="hidden">
+      <header class="topbar">
+        <button class="icon-btn mobile-menu" data-action="toggle-sidebar" aria-label="Menu">☰</button>
+        <div class="brand">
+          <span class="brand-symbol"><img src="assets/logo-iain-parepare.png" alt="Logo IAIN Parepare"></span>
+          <div><strong>PANRITA FALAK</strong><small>Arah Kiblat • Waktu Salat • Posisi Matahari</small></div>
+        </div>
+        <button class="icon-btn theme-toggle" data-action="theme" aria-label="Aktifkan mode gelap" title="Aktifkan mode gelap">🌙</button>
+        <label class="language-control" title="Ganti Bahasa"><span class="sr-only">Bahasa</span><select id="languageSelect" aria-label="Bahasa"><option value="id">Indonesia</option><option value="en">English</option><option value="jawi">Arab</option><option value="lontara">Lontara Bugis</option></select></label>
+      </header>
+
+      <div class="layout">
+        <aside id="sidebar" class="sidebar">
+          <nav>
+            <button class="nav-item active" data-page="home"><span>🏠</span>Beranda</button>
+            <button class="nav-item" data-page="qibla"><span>🕋</span>Arah Kiblat</button>
+            <button class="nav-item" data-page="theodolite"><span>🔭</span>Teodolit Falak</button>
+            <button class="nav-item" data-page="hilal"><span>🌙</span>Hisab & Rukyat Hilal</button>
+            <button class="nav-item" data-page="rashdul"><span>📏</span>Rashdul Kiblat</button>
+            <button class="nav-item" data-page="sun"><span>☀️</span>Posisi Matahari</button>
+            <button class="nav-item" data-page="prayer"><span>🕒</span>Waktu Salat</button>
+            <button class="nav-item" data-page="monthly"><span>📅</span>Jadwal Bulanan</button>
+            <button class="nav-item" data-page="calc"><span>🧮</span>Detail Perhitungan</button>
+            <button class="nav-item" data-page="map"><span>🗺️</span>Peta</button>
+            <button class="nav-item" data-page="settings"><span>⚙️</span>Pengaturan</button>
+            <button class="nav-item" data-page="info"><span>ⓘ</span>Informasi & Bantuan</button>
+          </nav>
+          <div class="sidebar-footer">Ilmu falak adalah cahaya bagi yang mencari arah dan waktu yang tepat.</div>
+        </aside>
+
+        <main class="content">
+          <!-- Home -->
+          <section class="page active" id="page-home">
+            <div class="home-photo-banner" role="img" aria-label="Gerbang IAIN Parepare saat senja">
+              <div class="home-photo-banner__content">
+                <span class="home-photo-banner__eyebrow">PANRITA FALAK</span>
+                <strong>Menentukan Arah, Memahami Waktu</strong>
+                <span class="home-photo-banner__caption">Ilmu Falak • IAIN Parepare</span>
+              </div>
+            </div>
+            <div class="page-heading">
+              <div><span class="eyebrow">BERANDA</span><h2>Assalāmu'alaikum</h2><p>Semoga hari ini penuh keberkahan 💫</p></div>
+              <div class="live-pill"><i></i><span id="liveClock">--:--:--</span></div>
+            </div>
+
+            <div class="location-card card">
+              <div class="location-icon">⌖</div>
+              <div><small>Lokasi Anda</small><strong id="homeLocation">Kota Parepare, Sulawesi Selatan</strong><span id="homeCoords">Lat -4.0189° • Lon 119.6238°</span></div>
+              <div class="button-row"><button class="text-btn" data-action="get-location">📍 Lokasi saat ini</button><button class="text-btn" data-action="choose-location">🇮🇩 Pilih lokasi</button></div>
+            </div>
+
+            <div class="hero-grid">
+              <div class="hero-qibla card gradient-card">
+                <div class="mini-compass"><div class="mini-arrow" id="miniArrow"></div><span>N</span><span>E</span><span>S</span><span>W</span><div class="mini-kaaba">🕋</div></div>
+                <div><small>Arah Kiblat</small><strong id="homeQibla">296.7°</strong><span id="homeQiblaDir">Barat Laut</span></div>
+                <button class="secondary-btn" data-page-jump="qibla">Buka Kompas</button>
+              </div>
+              <div class="card quick-card"><div class="quick-icon">◷</div><small>Salat berikutnya</small><strong id="nextPrayer">--</strong><span id="nextPrayerTime">--:--</span></div>
+              <div class="card quick-card"><div class="quick-icon">☼</div><small>Azimut Matahari</small><strong id="homeSunAzimuth">--°</strong><span id="homeSunAltitude">Alt --°</span></div>
+              <div class="card quick-card"><div class="quick-icon">◉</div><small>Zona Waktu</small><strong id="homeTimezone">WITA</strong><span>UTC+8</span></div>
+            </div>
+
+            <div class="section-title"><h3>Fitur Utama</h3><span>Ilmu Falak</span></div>
+            <div class="feature-grid">
+              <button class="feature-card" data-page-jump="qibla"><span>🕋</span><b>Arah Kiblat</b><small>Kompas sensor & azimut</small></button>
+              <button class="feature-card" data-page-jump="theodolite"><span>🔭</span><b>Teodolit Falak</b><small>Kamera, sudut, koordinat & hisab</small></button>
+              <button class="feature-card hilal-feature-card" data-page-jump="hilal"><span>🌙</span><b>Hisab & Rukyat Hilal</b><small>Globe 3D, peta bintang, kamera & pengingat</small></button>
+              <button class="feature-card" data-page-jump="prayer"><span>🕒</span><b>Waktu Salat</b><small>Jadwal harian akurat</small></button>
+              <button class="feature-card" data-page-jump="monthly"><span>📅</span><b>Jadwal Bulanan</b><small>Kalender waktu salat</small></button>
+              <button class="feature-card" data-page-jump="sun"><span>☀️</span><b>Posisi Matahari</b><small>Azimut & ketinggian</small></button>
+              <button class="feature-card" data-page-jump="rashdul"><span>📏</span><b>Rashdul Kiblat</b><small>Waktu bayangan kiblat</small></button>
+              <button class="feature-card" data-page-jump="settings"><span>⚙️</span><b>Pengaturan</b><small>Metode hisab & lokasi</small></button>
+            </div>
+          </section>
+
+
+          <!-- Hisab & Rukyat Hilal: modul tambahan, fitur lama dipertahankan -->
+          <section class="page" id="page-hilal">
+            <div class="page-heading"><div><span class="eyebrow">ASTRONOMI BULAN</span><h2>Hisab & Rukyat Hilal</h2><p>Eksplorasi fase Bulan, perkiraan posisi hilal, dan panduan pengamatan.</p></div><div class="status-dot" id="hilalStatus">Mode edukasi</div></div>
+            <div class="hilal-hero card">
+              <div class="hilal-hero-copy"><span class="hilal-kicker">PANRITA FALAK • IAIN PAREPARE</span><h3>Mengenali hilal, memahami langit.</h3><p>Gunakan lokasi pengamat untuk melihat ringkasan astronomi dan merencanakan rukyat.</p>
+                <div class="hilal-hero-actions"><button class="primary-btn" data-action="hilal-gps">⌖ Gunakan lokasi GPS</button><button class="secondary-btn" data-action="hilal-reminder">🔔 Aktifkan pengingat</button></div>
+              </div><div class="hilal-moon-art" aria-label="Ilustrasi Bulan sabit"><div class="hilal-orbit"></div><div class="hilal-globe"><div class="hilal-globe-shade"></div><span class="hilal-globe-highlight"></span></div><span class="hilal-orbit-dot"></span><span class="hilal-art-star star-a">✦</span><span class="hilal-art-star star-b">✧</span><span class="hilal-art-star star-c">·</span></div>
+            </div>
+            <div class="hilal-stats-grid">
+              <div class="card hilal-stat"><small>Lokasi pengamat</small><b id="hilalLocation">Kota Parepare</b><span id="hilalCoordinates">Lat -4.0189°, Lon 119.6238°</span></div>
+              <div class="card hilal-stat"><small>Umur Bulan (perkiraan)</small><b id="hilalAge">-- jam</b><span id="hilalPhase">Menghitung fase</span></div>
+              <div class="card hilal-stat"><small>Perkiraan ijtimak berikutnya</small><b id="hilalConjunction">--</b><span>Estimasi siklus sinodis</span></div>
+              <div class="card hilal-stat"><small>Prediksi awal</small><b id="hilalPrediction">Menyiapkan data</b><span id="hilalPredictionNote">Bukan konfirmasi rukyat</span></div>
+            </div>
+            <div class="hilal-columns">
+              <div class="card hilal-panel"><div class="hilal-panel-heading"><div><span class="eyebrow">LANGIT INTERAKTIF</span><h3>Peta bintang & arah hilal</h3></div><span class="hilal-live-dot">● Lokal</span></div>
+                <canvas id="hilalSkyCanvas" class="hilal-sky-canvas" aria-label="Peta bintang ilustratif"></canvas>
+                <div class="hilal-sky-legend"><span>✦ Bintang animasi</span><span>☾ Penanda Bulan perkiraan</span><span>☼ Siang/malam mengikuti posisi Matahari</span></div>
+                <div class="hilal-values"><div><small>Azimut Bulan*</small><b id="hilalAzimuth">--°</b></div><div><small>Ketinggian Bulan*</small><b id="hilalAltitude">--°</b></div><div><small>Elongasi*</small><b id="hilalElongation">--°</b></div></div>
+                <p class="hint">*Nilai posisi Bulan pada modul awal ini adalah perkiraan edukatif berpresisi rendah, bukan ephemeris resmi. Peta bintang adalah visualisasi, bukan citra langit langsung.</p>
+              </div>
+              <div class="card hilal-panel"><div class="hilal-panel-heading"><div><span class="eyebrow">PANDUAN PENGAMATAN</span><h3>Kamera & penunjuk arah</h3></div></div>
+                <div class="hilal-camera-wrap" id="hilalCameraWrap"><video id="hilalCamera" autoplay playsinline muted></video><div class="hilal-camera-placeholder" id="hilalCameraPlaceholder"><span>☾</span><b>Bidikan langit barat</b><small>Aktifkan kamera belakang dan arahkan perangkat ke ufuk.</small></div><div class="hilal-camera-overlay"><button class="hilal-camera-back" id="hilalCameraBack" type="button" aria-label="Kembali ke halaman Hilal">‹ <span>Kembali</span></button><div class="hilal-camera-guidance" id="hilalCameraGuidance">AKTIFKAN SENSOR ARAH UNTUK PENUNJUK KOMPAS</div><div class="hilal-reticle"></div><div class="hilal-direction-arrow" id="hilalDirectionArrow">↑</div><div class="hilal-camera-label" id="hilalCameraLabel">Azimut Bulan: --°</div><div class="hilal-camera-bottom-note">Penunjuk arah perkiraan • bukan deteksi Bulan otomatis</div></div></div>
+                <div class="button-row hilal-camera-actions"><button class="primary-btn" data-action="hilal-camera-start">Buka kamera layar penuh</button><button class="secondary-btn" data-action="hilal-camera-stop">Matikan kamera</button><button class="secondary-btn" data-action="hilal-sensor">Aktifkan sensor arah</button></div>
+                <p class="hint" id="hilalCameraStatus">Kamera membutuhkan izin dan biasanya HTTPS atau localhost. Panah membantu orientasi kompas, bukan AR presisi; arahkan ke ufuk barat.</p>
+              </div>
+            </div>
+            <div class="card hilal-panel hilal-analysis"><div class="hilal-panel-heading"><div><span class="eyebrow">ANALISIS VISIBILITAS</span><h3>Pemeriksaan kriteria MABIMS</h3></div><span class="hilal-badge">Hisab awal</span></div>
+              <div class="hilal-check-grid"><div><span>Tinggi hilal ≥ 3°</span><b id="hilalHeightCheck">Belum dihitung</b></div><div><span>Elongasi ≥ 6,4°</span><b id="hilalElongationCheck">Belum dihitung</b></div></div>
+              <p id="hilalAnalysisText" class="hilal-analysis-text">Analisis akan diperbarui berdasarkan perkiraan posisi Bulan. Kedua ambang perlu terpenuhi untuk memenuhi kriteria MABIMS, tetapi tidak menjamin hilal terlihat.</p>
+              <div class="hilal-reminder-box"><div><b>🔔 Pengingat hilal</b><span id="hilalReminderText">Pengingat belum diaktifkan.</span></div><button class="secondary-btn" data-action="hilal-reminder">Atur pengingat</button></div>
+              <p class="hint">Pengingat dibuat di perangkat ini. Browser dapat membatasi notifikasi saat aplikasi ditutup; untuk pengingat yang andal di Android, kelak perlu integrasi notifikasi native APK.</p>
+            </div>
+          </section>
+
+          <!-- Qibla -->
+          <section class="page" id="page-qibla">
+            <div class="page-heading"><div><span class="eyebrow">KOMPAS</span><h2>Arah Kiblat</h2><p>Gunakan sensor orientasi perangkat untuk navigasi langsung.</p></div><div class="status-dot" id="sensorStatus">Sensor belum aktif</div></div>
+            <div class="location-card card compact"><div class="location-icon">⌖</div><div><small>Lokasi Anda</small><strong id="qiblaLocation">Kota Parepare, Sulawesi Selatan</strong><span id="qiblaCoords">Lat -4.0189° • Lon 119.6238°</span></div><button class="text-btn" data-action="get-location">GPS</button></div>
+            <div class="qibla-layout">
+              <div class="compass-card card">
+                <div class="bearing-top"><small>Arah Kiblat</small><strong id="qiblaBearing">296.7°</strong><span id="qiblaDirection">Barat Laut</span></div>
+                <div id="compass" class="compass">
+                  <div class="compass-ring ring-outer"></div><div class="compass-ring ring-inner"></div>
+                  <div class="cardinal north"></div><div class="cardinal east"></div><div class="cardinal south"></div><div class="cardinal west"></div>
+                  <div class="degree-ticks" id="degreeTicks"></div>
+                  <div class="qibla-needle" id="qiblaNeedle"><div class="needle-tip"></div><div class="needle-tail"></div></div>
+                  <div class="kaaba-center">🕋</div>
+                </div>
+                <div class="compass-readouts"><div><small>Azimut Kiblat</small><b id="qiblaAzimuth">296.7°</b></div><div><small>Arah Mata Angin</small><b id="qiblaCardinal">Barat Laut</b></div></div>
+                <button class="primary-btn" data-action="activate-compass">Aktifkan Kompas</button>
+                <p class="hint">Di iPhone/iPad, izin orientasi harus diberikan oleh pengguna. Kalibrasi perangkat dan jauhkan dari benda bermagnet.</p>
+              </div>
+              <div class="side-info">
+                <div class="info-card card"><span>Koordinat Ka'bah (Makkah)</span><b>21°25′21″ LU</b><b>39°49′34″ BT</b></div>
+                <div class="info-card card"><span>Jarak ke Ka'bah</span><b id="distanceMakkah">-- km</b></div>
+                <div class="info-card card"><span>Deviasi sensor</span><b id="sensorHeading">--°</b><small id="sensorText">Belum membaca sensor.</small></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Teodolit Falak: added module; existing pages remain intact -->
+          <section class="page" id="page-theodolite">
+            <div class="page-heading"><div><span class="eyebrow">PENGUKURAN FALAK</span><h2>Teodolit Falak</h2><p>Kamera HP, koordinat pengamat, azimut kiblat, sudut vertikal, jarak, dan hasil hitung.</p></div><div class="status-dot" id="theodoliteStatus">Siap digunakan</div></div>
+            <div class="card theodolite-camera-card">
+              <div class="theodolite-camera-head"><div><b>Bidikan kamera HP</b><small id="cameraStatus">Kamera belum diaktifkan</small></div><div class="button-row"><button class="primary-btn" data-action="camera-start">Aktifkan Kamera</button><button class="secondary-btn" data-action="camera-stop">Matikan</button></div></div>
+              <div class="theodolite-camera-frame"><video id="theodoliteVideo" autoplay playsinline muted></video><div class="camera-placeholder" id="cameraPlaceholder"><span>◎</span><b>Pratinjau kamera</b><small>Aktifkan kamera belakang untuk membantu membidik objek.</small></div><div class="camera-reticle" aria-hidden="true"><i></i><b></b><i></i></div></div>
+              <p class="hint">Kamera hanya menampilkan pratinjau. Kamera HP tidak otomatis mengukur sudut seperti teodolit fisik. Untuk hasil falak, gunakan sensor yang tersedia atau masukkan bacaan instrumen secara manual.</p>
+            </div>
+            <div class="theodolite-action-row button-row"><button class="secondary-btn" data-action="theodolite-gps">Ambil Posisi GPS</button><button class="secondary-btn" data-action="theodolite-sensor">Aktifkan Sensor Arah</button><button class="secondary-btn" data-action="theodolite-calc">Hitung Semua</button></div>
+            <div class="theodolite-metric-grid">
+              <div class="metric card"><small>Azimut Kiblat</small><b id="tdQibla">--°</b><span id="tdQiblaDir">--</span></div>
+              <div class="metric card"><small>Arah sensor HP</small><b id="tdHeading">--°</b><span id="tdHeadingNote">Belum terbaca</span></div>
+              <div class="metric card"><small>Azimut Matahari</small><b id="tdSunAzimuth">--°</b><span id="tdSunAltitude">Ketinggian --°</span></div>
+              <div class="metric card"><small>Akurasi GPS</small><b id="tdGpsAccuracy">-- m</b><span id="tdCoordinates">Koordinat belum dibaca</span></div>
+            </div>
+            <div class="card theodolite-form-card">
+              <h3>Data pengukuran teodolit</h3>
+              <p class="hint">Masukkan bacaan sudut dari teodolit fisik atau gunakan arah sensor HP sebagai perkiraan awal. Jarak di bawah ditafsirkan sebagai jarak miring.</p>
+              <div class="theodolite-input-grid">
+                <label>Azimut horizontal hasil bidikan (°)<input id="tdMeasuredAzimuth" type="number" min="0" max="360" step="0.01" placeholder="0–360"></label>
+                <label>Sudut vertikal dari horizon (°)<input id="tdVerticalAngle" type="number" min="-89.9" max="89.9" step="0.01" value="0"></label>
+                <label>Jarak miring ke target (m)<input id="tdSlopeDistance" type="number" min="0" step="0.01" value="10"></label>
+                <label>Tinggi alat dari tanah (m)<input id="tdInstrumentHeight" type="number" min="0" step="0.01" value="1.5"></label>
+                <label>Tinggi target/objek dari titik bidik (m)<input id="tdTargetHeight" type="number" min="0" step="0.01" value="0"></label>
+                <label>Elevasi tempat alat (mdpl)<input id="tdStationElevation" type="number" step="0.1" value="50"></label>
+              </div>
+              <div class="button-row"><button class="primary-btn" data-action="theodolite-calc">Hitung Pengukuran</button><button class="secondary-btn" data-action="theodolite-use-heading">Gunakan Arah Sensor</button><button class="secondary-btn" data-action="theodolite-use-qibla">Isi Azimut Kiblat</button></div>
+            </div>
+            <div class="card theodolite-results-card"><h3>Hasil perhitungan teodolit</h3><div class="theodolite-result-grid">
+              <div class="coordinate-value"><small>Selisih azimut terhadap kiblat</small><b id="tdAzimuthError">--°</b></div>
+              <div class="coordinate-value"><small>Jarak horizontal</small><b id="tdHorizontalDistance">-- m</b></div>
+              <div class="coordinate-value"><small>Komponen beda tinggi (jarak miring)</small><b id="tdVerticalComponent">-- m</b></div>
+              <div class="coordinate-value"><small>Beda tinggi setelah koreksi alat/target</small><b id="tdHeightDifference">-- m</b></div>
+              <div class="coordinate-value"><small>Elevasi perkiraan target</small><b id="tdTargetElevation">-- mdpl</b></div>
+              <div class="coordinate-value"><small>Sudut Matahari terhadap kiblat</small><b id="tdSunQiblaDifference">--°</b></div>
+            </div><div id="tdCalculationSteps" class="calculation-steps"><p class="hint">Masukkan data lalu tekan Hitung Pengukuran untuk melihat substitusi rumus dan hasil akhir.</p></div></div>
+            <div class="card theodolite-form-card" id="solarSimulationCard">
+              <h3>Simulasi Posisi Matahari</h3>
+              <p class="hint">Prediksi posisi geometris Matahari berdasarkan waktu perangkat, koordinat lokasi, dan zona waktu yang dipilih. Ini simulasi hisab, bukan pembacaan kamera.</p>
+              <div class="theodolite-input-grid">
+                <label>Tanggal dan waktu lokal<input id="solarSimulationDate" type="datetime-local"></label>
+                <label>Zona waktu<select id="solarSimulationTimezone"><option value="7">WIB (UTC+7)</option><option value="8" selected>WITA (UTC+8)</option><option value="9">WIT (UTC+9)</option><option value="0">UTC</option></select></label>
+              </div>
+              <div class="theodolite-result-grid">
+                <div class="coordinate-value"><small>Azimut Matahari</small><b id="simSunAz">--°</b></div>
+                <div class="coordinate-value"><small>Tinggi Matahari</small><b id="simSunAlt">--°</b></div>
+                <div class="coordinate-value"><small>Deklinasi</small><b id="simSunDecl">--°</b></div>
+                <div class="coordinate-value"><small>Status geometris</small><b id="simSunState">--</b></div>
+              </div>
+              <p id="simSunNote" class="coordinate-status" aria-live="polite">Pilih waktu lalu tekan Simulasikan.</p>
+              <div class="button-row"><button class="primary-btn" data-action="simulate-sun">Simulasikan Posisi Matahari</button><button class="secondary-btn" data-action="use-current-sun-time">Gunakan Waktu Sekarang</button></div>
+            </div>
+            <div class="card theodolite-form-card" id="observationLogCard">
+              <h3>Catatan dan Validasi Observasi</h3>
+              <p class="hint">Simpan hasil pengukuran saat ini sebagai catatan lokal di perangkat. Catatan ini bukan bukti akurasi otomatis; bandingkan dengan bacaan teodolit terkalibrasi.</p>
+              <div class="theodolite-input-grid">
+                <label>Nama sesi / lokasi pengamatan<input id="observationName" type="text" maxlength="100" placeholder="Contoh: Pengamatan halaman kampus"></label>
+                <label>Azimut pembanding dari teodolit fisik (°)<input id="referenceAzimuth" type="number" min="0" max="360" step="0.01" placeholder="Opsional"></label>
+                <label>Ketelitian sudut alat (detik busur)<input id="instrumentPrecisionArcsec" type="number" min="0" step="1" value="20" title="Masukkan spesifikasi ketelitian yang tercantum pada manual instrumen"></label>
+                <label>Catatan pengamat<input id="observationNotes" type="text" maxlength="300" placeholder="Cuaca, kondisi alat, dan sebagainya"></label>
+              </div>
+              <div class="button-row"><button class="primary-btn" data-action="save-observation">Simpan Observasi</button><button class="secondary-btn" data-action="export-observation-report">Buat Laporan / PDF</button><button class="secondary-btn" data-action="clear-observations">Hapus Catatan</button></div>
+              <div id="observationValidation" class="coordinate-status" aria-live="polite">Belum ada validasi pembanding.</div>
+              <p class="hint">Ketelitian sudut yang ditampilkan berasal dari spesifikasi alat yang Anda masukkan; bukan estimasi otomatis seluruh ketidakpastian pengamatan. Kesalahan pemusatan, perataan, target, atmosfer, dan prosedur harus dianalisis terpisah.</p>
+              <div id="observationList" class="observation-list"><p class="hint">Belum ada catatan observasi tersimpan.</p></div>
+            </div>
+            <div class="card theodolite-form-card" id="learningGuideCard">
+              <h3>Panduan Pengukuran Interaktif</h3>
+              <div class="learning-steps">
+                <details open><summary>1. Siapkan lokasi dan instrumen</summary><p>Ambil koordinat GPS di area terbuka. Letakkan teodolit fisik pada tripod yang stabil, lakukan pemusatan dan perataan sesuai manual instrumen, serta catat tinggi alat.</p></details>
+                <details><summary>2. Tentukan acuan azimut</summary><p>Gunakan prosedur orientasi yang sesuai dan instrumen terkalibrasi. Sensor kompas ponsel hanya pembanding kasar karena dapat dipengaruhi logam, magnet, dan koreksi deklinasi magnetik.</p></details>
+                <details><summary>3. Catat sudut dan jarak</summary><p>Masukkan azimut horizontal, sudut vertikal dari garis horizon, jarak miring, tinggi alat, tinggi target, serta elevasi stasiun. Jika alat memberi sudut zenit Z, ubah menjadi v = 90° − Z.</p></details>
+                <details><summary>4. Periksa hasil dan ketidakpastian</summary><p>Ulangi pengukuran beberapa kali, bandingkan dengan acuan independen, catat kondisi pengamatan dan spesifikasi alat. Jangan menyimpulkan akurasi hanya dari satu pengukuran.</p></details>
+              </div>
+            </div>
+            <div class="card theodolite-note"><b>Catatan akurasi</b><p>Hasil azimut kiblat dihitung dari koordinat lokasi dan koordinat Ka'bah. Hasil sensor HP dipengaruhi kalibrasi magnetometer, gangguan logam/magnet, orientasi layar, dan kemampuan perangkat. Pengukuran profesional harus dibandingkan dengan teodolit fisik yang terkalibrasi. Prediksi posisi Matahari memakai pendekatan astronomi dan bukan pengganti ephemeris resmi untuk pekerjaan presisi.</p></div>
+          </section>
+
+          <!-- Map: embedded Leaflet + OpenStreetMap; no Google Cloud API key required -->
+          <section class="page" id="page-map">
+            <div class="page-heading"><div><span class="eyebrow">PETA</span><h2>Peta Arah Kiblat</h2><p>Peta interaktif langsung di dalam Panrita Falak, menggunakan OpenStreetMap. Untuk tampilan citra satelit dan medan yang lebih detail, buka lokasi yang sama di Google Earth.</p></div><div class="button-row"><button class="secondary-btn" data-action="map-center-user">Lokasi Saya</button><button class="secondary-btn" data-action="map-show-kaaba">Lihat Ka’bah</button><button class="secondary-btn" data-action="refresh-map">Perbarui Peta</button><button class="primary-btn" data-action="google-earth">Buka di Google Earth ↗</button></div></div>
+            <div class="map-card card"><div id="map" class="map"></div><div id="mapNotice" class="map-notice">Memuat peta… Pastikan internet aktif.</div></div>
+            <div class="map-summary card"><div><span>Arah Kiblat</span><b id="mapBearing">296.7°</b><small id="mapDirection">Barat Laut</small></div><div><span>Jarak ke Ka'bah</span><b id="mapDistance">-- km</b><small>Jarak lingkaran besar</small></div><div><span>Lokasi</span><b id="mapCoords">-4.0189, 119.6238</b><small>Koordinat pengamat</small></div></div>
+          </section>
+
+          <!-- Prayer -->
+          <section class="page" id="page-prayer">
+            <div class="page-heading"><div><span class="eyebrow">IBADAH HARIAN</span><h2>Waktu Salat</h2><p id="prayerDateLabel">Hari ini</p></div><button class="secondary-btn" data-action="today">Hari Ini</button></div>
+            <div class="date-control card"><button data-action="date-prev">‹</button><div><small>Tanggal</small><strong id="selectedDate">--</strong></div><button data-action="date-next">›</button></div>
+            <div class="method-summary card"><span>Metode Perhitungan</span><b id="prayerMethodLabel">Umm al-Qura (Makkah)</b><span id="prayerZoneLabel">WITA (UTC+8)</span></div>
+            <div class="prayer-grid" id="prayerGrid"></div>
+            <div class="card prayer-alert-card"><h3>🔔 Pengingat waktu salat</h3><p>Aktifkan notifikasi dan suara azan untuk jadwal yang dihitung aplikasi pada lokasi Anda. Izin akan diminta terlebih dahulu.</p><label class="radio"><input id="prayerAlertsEnabled" type="checkbox"> Aktifkan pengingat waktu salat dan suara azan</label><div class="button-row"><button class="primary-btn" data-action="prayer-alert-enable">Izinkan & aktifkan</button><button class="secondary-btn" data-action="prayer-alert-disable">Matikan pengingat</button><button class="secondary-btn" data-action="prayer-alert-test">Uji suara azan</button></div><small id="prayerAlertStatus" role="status">Pengingat belum diaktifkan.</small><p class="hint">Pada versi web, pengingat hanya berjalan saat halaman tetap terbuka dan aktif. Notifikasi saat aplikasi ditutup memerlukan integrasi Android native; izin notifikasi browser saja tidak menjamin alarm latar belakang.</p></div>
+            <div class="card calculation-note"><b>Catatan</b><p>Waktu salat dihitung berdasarkan koordinat, tanggal, zona waktu, ketinggian matahari, dan metode Asar yang dipilih. Hasil dapat berbeda beberapa menit dari jadwal resmi setempat.</p></div>
+          </section>
+
+          <!-- Monthly -->
+          <section class="page" id="page-monthly">
+            <div class="page-heading"><div><span class="eyebrow">KALENDER</span><h2>Jadwal Salat Bulanan</h2><p>Perhitungan otomatis untuk seluruh hari dalam bulan.</p></div><button class="secondary-btn" data-action="export-csv">Ekspor CSV</button></div>
+            <div class="month-control card"><button data-action="month-prev">‹</button><strong id="monthLabel">September 2026</strong><button data-action="month-next">›</button></div>
+            <div class="table-wrap card"><table><thead><tr><th>Tanggal</th><th>Subuh</th><th>Terbit</th><th>Zuhur</th><th>Asar</th><th>Maghrib</th><th>Isya</th></tr></thead><tbody id="monthlyBody"></tbody></table></div>
+          </section>
+
+          <!-- Sun -->
+          <section class="page" id="page-sun">
+            <div class="page-heading"><div><span class="eyebrow">ASTRONOMI</span><h2>Posisi Matahari</h2><p>Azimut, ketinggian, dan waktu penting matahari.</p></div></div>
+            <div class="sun-location card"><span>⌖</span><div><b id="sunLocation">Kota Parepare, Sulawesi Selatan</b><small id="sunDate">--</small></div></div>
+            <div class="sun-visual card"><div class="sun-arc scene-day" id="sunScene"><div class="scene-stars" aria-hidden="true"></div><div class="scene-cloud scene-cloud-a" aria-hidden="true"></div><div class="scene-cloud scene-cloud-b" aria-hidden="true"></div><div class="sun-dot" id="sunDot" aria-label="Posisi Matahari">☀</div><div class="horizon"></div><div class="sun-building" aria-hidden="true">⌂</div><div class="sun-scene-caption"><b id="sunSceneLabel">Langit siang</b><span id="sunSceneDetail">Simulasi berdasarkan waktu dan lokasi</span></div></div></div>
+            <div class="metric-grid"><div class="metric card"><small>Azimut Matahari</small><b id="sunAzimuth">--°</b><span id="sunDirection">--</span></div><div class="metric card"><small>Ketinggian Matahari</small><b id="sunAltitude">--°</b></div><div class="metric card"><small>Waktu Zawal</small><b id="sunZawal">--:--</b></div><div class="metric card"><small>Waktu Istiwā'</small><b id="sunTransit">--:--</b></div></div>
+          </section>
+
+          <!-- Rashdul -->
+          <section class="page" id="page-rashdul">
+            <div class="page-heading"><div><span class="eyebrow">RASHDUL KIBLAT</span><h2>Rashdul Kiblat</h2><p>Perkiraan waktu matahari sejajar dengan arah kiblat.</p></div></div>
+            <div class="rashdul-grid"><div class="rashdul-date card"><span>Tanggal yang dipilih</span><b id="rashdulDate">--</b><div class="rashdul-date-controls"><input id="rashdulDatePicker" type="date" aria-label="Pilih tanggal Rashdul Kiblat"><button class="secondary-btn" data-action="rashdul-today">Hari ini</button></div><button class="text-btn" data-action="rashdul-next">Cari tanggal berikutnya →</button></div><div class="rashdul-location card"><span>Lokasi pengamatan</span><b id="rashdulLocation">Kota Parepare, Sulawesi Selatan</b><small>Waktu mengikuti zona waktu lokasi yang dipilih.</small></div></div>
+            <div class="rashdul-calendar card"><div class="rashdul-calendar-head"><div><span class="eyebrow">KALENDER PERISTIWA</span><h3 id="rashdulMonthLabel">Jadwal Rashdul Kiblat</h3><p>Pilih tanggal untuk melihat hasil perhitungan.</p></div><div class="button-row"><button class="secondary-btn" data-action="rashdul-month-prev" aria-label="Bulan sebelumnya">‹</button><button class="secondary-btn" data-action="rashdul-month-next" aria-label="Bulan berikutnya">›</button></div></div><div class="rashdul-calendar-legend"><span class="sun-mark">☼</span><span>Tanda tanggal dengan hasil pencarian Rashdul awal (perlu verifikasi)</span></div><div class="rashdul-calendar-grid" id="rashdulCalendarGrid"></div><div class="rashdul-upcoming"><h4>Perkiraan peristiwa terdekat</h4><div id="rashdulUpcomingList"></div></div><p class="rashdul-caveat">Jadwal merupakan hasil pencarian numerik awal, bukan penetapan resmi. Verifikasi dengan ephemeris atau jadwal falak tepercaya sebelum digunakan untuk pengukuran ibadah.</p></div>
+            <div class="rashdul-main card"><div class="rashdul-illustration">☼<span>⌖</span><strong>Ka'bah</strong></div><div><small>Perkiraan Waktu Rashdul Kiblat</small><strong class="big" id="rashdulTime">--:-- WITA</strong><p id="rashdulExplanation">Rashdul kiblat terjadi ketika posisi Matahari memungkinkan bayangan benda tegak mengarah ke Ka'bah.</p></div></div>
+          </section>
+
+          <!-- Settings -->
+          <section class="page" id="page-settings">
+            <div class="page-heading"><div><span class="eyebrow">KONFIGURASI</span><h2>Pengaturan</h2><p>Atur lokasi dan parameter hisab.</p></div><button class="primary-btn" data-action="save-settings">Simpan</button></div>
+            <div class="settings-grid">
+              <div class="settings-card card"><h3>Lokasi</h3><label>Latitude<input id="latInput" type="number" step="0.000001" value="-4.0189"></label><label>Longitude<input id="lonInput" type="number" step="0.000001" value="119.6238"></label><label>Ketinggian (meter)<input id="elevInput" type="number" step="1" value="50"></label><div class="button-row"><button class="secondary-btn" data-action="get-location">📍 Lokasi saat ini</button><button class="secondary-btn" data-action="choose-location">🇮🇩 Pilih lokasi Indonesia</button><button class="secondary-btn" data-action="save-location">Simpan Lokasi</button></div></div>
+              <div class="settings-card card"><h3>Metode Perhitungan Waktu Salat</h3><label>Metode Hisab<select id="methodSelect"><option value="auto" selected>Otomatis berdasarkan lokasi</option><option value="kemenag">Kemenag RI (Indonesia, estimasi hisab)</option><option value="umm">Umm al-Qura (Makkah)</option><option value="mw">Muslim World League</option><option value="egypt">Egyptian General Authority</option><option value="karachi">University of Islamic Sciences, Karachi</option><option value="isna">ISNA</option><option value="custom">Kustom</option></select></label><div class="two-col"><label>Subuh (°)<input id="fajrAngle" type="number" step="0.1" value="20"></label><label>Isya (°)<input id="ishaAngle" type="number" step="0.1" value="18"></label></div><h3>Metode Asar</h3><label class="radio"><input type="radio" name="asr" value="1" checked> Syafi'i (1 × tinggi benda)</label><label class="radio"><input type="radio" name="asr" value="2"> Hanafi (2 × tinggi benda)</label></div>
+              <div class="settings-card card"><h3>Zona Waktu</h3><label>Zona<select id="timezoneSelect"><option value="8">WITA (UTC+8)</option><option value="7">WIB (UTC+7)</option><option value="9">WIT (UTC+9)</option><option value="0">UTC</option></select></label><label>Nama Lokasi<input id="locationNameInput" value="Kota Parepare, Sulawesi Selatan"></label></div>
+            </div>
+          </section>
+
+          <!-- Calculator -->
+          <section class="page" id="page-calc">
+            <div class="page-heading"><div><span class="eyebrow">HISAB</span><h2>Detail Perhitungan</h2><p>Rumus yang digunakan aplikasi.</p></div></div>
+            <div class="formula-tabs card"><button class="formula-tab active" data-formula="qibla">Arah Kiblat</button><button class="formula-tab" data-formula="sun">Waktu Salat</button><button class="formula-tab" data-formula="distance">Jarak</button><button class="formula-tab" data-formula="coords">Kalkulator Koordinat</button></div>
+            <div class="formula-card card" id="formulaContent"></div>
+          </section>
+
+          <!-- Info -->
+          <section class="page" id="page-info">
+            <div class="page-heading"><div><span class="eyebrow">BANTUAN</span><h2>Informasi & Bantuan</h2><p>Panduan penggunaan aplikasi.</p></div></div>
+            <div class="accordion-list">
+              <button class="accordion card"><span>Tentang Aplikasi Ilmu Falak</span><b>›</b></button>
+              <div class="accordion-panel card">Aplikasi ini dikembangkan oleh mahasiswa dan mahasiswi IAIN Parepare sebagai media pembelajaran dan pendukung penerapan ilmu falak. Aplikasi ini menyediakan berbagai fitur, meliputi perhitungan arah kiblat, waktu salat, posisi Matahari, jadwal salat bulanan, serta Rashdul Kiblat berdasarkan koordinat geografis pengguna.</div>
+              <button class="accordion card"><span>Panduan Penggunaan</span><b>›</b></button>
+              <div class="accordion-panel card">Izinkan GPS untuk mengambil lokasi. Untuk kompas, gunakan perangkat yang memiliki sensor orientasi dan berikan izin ketika diminta. Peta menggunakan OpenStreetMap dan membutuhkan koneksi internet. Peta dan sensor tidak menggantikan instrumen teodolit yang terkalibrasi.</div>
+              <button class="accordion card"><span>Akurasi & Referensi</span><b>›</b></button>
+              <div class="accordion-panel card">Azimut kiblat dihitung secara astronomi menggunakan koordinat Ka'bah. Kompas elektronik tetap dipengaruhi sensor, kalibrasi, lingkungan magnetik, dan kemampuan browser.</div>
+              <button class="accordion card"><span>FAQ</span><b>›</b></button>
+              <div class="accordion-panel card">Jika sensor tidak bergerak di laptop, itu normal karena sebagian besar laptop tidak memiliki magnetometer/orientasi. Gunakan ponsel untuk fitur kompas.</div>
+            </div>
+            <div class="developer-note card"><b>Ilmu Falak</b><span>“Ilmu falak adalah cahaya bagi yang mencari arah dan waktu yang tepat.”</span><small>Versi 1.0 • Web App</small></div>
+          </section>
+        </main>
+      </div>
+
+      <nav class="bottom-nav">
+        <button class="nav-item active" data-page="home"><span>🏠</span>Beranda</button>
+        <button class="nav-item" data-page="prayer"><span>📅</span>Jadwal</button>
+        <button class="nav-item" data-page="map"><span>🗺️</span>Peta</button>
+        <button class="nav-item" data-page="settings"><span>⚙️</span>Pengaturan</button>
+      </nav>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>\n  <script src="hilal.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</body>
+</html>

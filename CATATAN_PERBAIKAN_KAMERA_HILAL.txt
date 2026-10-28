@@ -1,0 +1,15 @@
+PERBAIKAN MODUL KAMERA HILAL
+
+Perubahan pada versi ini:
+1. Tombol kamera membuka pratinjau kamera belakang dalam mode layar penuh di ponsel.
+2. Tombol Kembali selalu tampil di kiri atas untuk menutup kamera dan menghentikan stream kamera.
+3. Tombol Escape pada keyboard juga menutup tampilan kamera.
+4. Penunjuk arah menampilkan azimut Bulan perkiraan dan arah perangkat bila sensor tersedia.
+5. Status menjelaskan bila sensor belum aktif; panah tidak boleh dianggap akurat sebelum sensor kompas tersedia dan terkalibrasi.
+6. Overlay bidikan adalah panduan arah, bukan pendeteksi Bulan/hilal otomatis. Lingkaran bidik tidak membuktikan objek di tengah adalah Bulan.
+
+CATATAN AKURASI DAN PERANGKAT:
+- Browser membutuhkan izin kamera dan konteks aman (HTTPS atau localhost); perilaku APK bergantung pada WebView/konfigurasi aplikasi.
+- Sensor orientasi berbeda antarperangkat dan dapat dipengaruhi magnet/logam. Uji di ponsel nyata dan kalibrasi kompas.
+- Perhitungan posisi Bulan pada modul saat ini masih pendekatan edukatif berpresisi rendah, bukan ephemeris resmi.
+- Jangan arahkan kamera optik ke Matahari.
